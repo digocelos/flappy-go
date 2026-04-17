@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	screenWidth  = 800
+	screenWidth  = 480
 	screenHeight = 640
 	birdWidth    = 38
 	birdHeight   = 26
@@ -43,6 +43,7 @@ type Game struct {
 	birdYVel  float64
 	pipes     []Pipe
 	nextPipeX float64
+	gameOver  bool
 }
 
 func NewGame() *Game {
@@ -89,6 +90,10 @@ func (g *Game) Update() error {
 		}
 	}
 
+	if g.gameOver {
+		return nil
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		g.birdYVel = jumpImpulse
 	}
@@ -108,7 +113,46 @@ func (g *Game) Update() error {
 		g.pipes = append(g.pipes, newPipe(g.nextPipeX))
 		g.nextPipeX += pipeSpacing
 	}
+
+	if g.checkCollision() {
+		g.gameOver = true
+	}
 	return nil
+}
+
+func (g *Game) checkCollision() bool {
+	birdX1 := g.birdX
+	birdY1 := g.birdYPos
+	birdX2 := birdX1 + birdWidth
+	birdY2 := birdY1 + birdHeight
+
+	if birdY1 <= 0 || birdY2 >= float64(screenHeight) {
+		return true
+	}
+
+	for _, pipe := range g.pipes {
+		topX1 := pipe.x
+		topY1 := float64(0)
+		topX2 := topX1 + pipeWidth
+		topY2 := pipe.gapY
+		if overlap(birdX1, birdY1, birdX2, birdY2, topX1, topY1, topX2, topY2) {
+			return true
+		}
+
+		bottomX1 := pipe.x
+		bottomY1 := pipe.gapY + pipeGap
+		bottomX2 := bottomX1 + pipeWidth
+		bottomY2 := float64(screenHeight)
+		if overlap(birdX1, birdY1, birdX2, birdY2, bottomX1, bottomY1, bottomX2, bottomY2) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func overlap(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2 float64) bool {
+	return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
