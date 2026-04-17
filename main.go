@@ -14,6 +14,7 @@ const (
 	screenHeight = 640
 	birdWidth    = 38
 	birdHeight   = 26
+	gravityAccel = 0.3
 )
 
 var background = color.RGBA{R: 40, G: 120, B: 200, A: 0xff}
@@ -24,15 +25,16 @@ const displayFrames = 60
 var autoExit = os.Getenv("FLAPPY_AUTO_EXIT") == "1"
 
 type Game struct {
-	frames int
-	birdX  float64
-	birdY  float64
+	frames   int
+	birdX    float64
+	birdYPos float64
+	birdYVel float64
 }
 
 func NewGame() *Game {
 	return &Game{
-		birdX: screenWidth/2 - birdWidth/2,
-		birdY: screenHeight/2 - birdHeight/2,
+		birdX:    screenWidth/2 - birdWidth/2,
+		birdYPos: screenHeight/2 - birdHeight/2,
 	}
 }
 
@@ -43,12 +45,15 @@ func (g *Game) Update() error {
 			os.Exit(0)
 		}
 	}
+
+	g.birdYVel += gravityAccel
+	g.birdYPos += g.birdYVel
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(background)
-	ebitenutil.DrawRect(screen, g.birdX, g.birdY, birdWidth, birdHeight, birdColor)
+	ebitenutil.DrawRect(screen, g.birdX, g.birdYPos, birdWidth, birdHeight, birdColor)
 }
 
 func (Game) Layout(_, _ int) (int, int) {
