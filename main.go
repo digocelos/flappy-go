@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	screenWidth  = 480
+	screenWidth  = 800
 	screenHeight = 640
 	birdWidth    = 38
 	birdHeight   = 26
