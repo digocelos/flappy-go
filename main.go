@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"math/rand"
@@ -44,6 +45,7 @@ type Game struct {
 	pipes     []Pipe
 	nextPipeX float64
 	gameOver  bool
+	score     int
 }
 
 func NewGame() *Game {
@@ -52,12 +54,14 @@ func NewGame() *Game {
 		birdYPos: screenHeight/2 - birdHeight/2,
 	}
 	g.initPipes()
+	g.score = 0
 	return g
 }
 
 type Pipe struct {
-	x    float64
-	gapY float64
+	x      float64
+	gapY   float64
+	scored bool
 }
 
 func init() {
@@ -103,6 +107,10 @@ func (g *Game) Update() error {
 
 	for i := range g.pipes {
 		g.pipes[i].x -= pipeSpeed
+		if !g.pipes[i].scored && g.pipes[i].x+pipeWidth < g.birdX {
+			g.pipes[i].scored = true
+			g.score++
+		}
 	}
 
 	for len(g.pipes) > 0 && g.pipes[0].x+pipeWidth < 0 {
@@ -166,6 +174,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		ebitenutil.DrawRect(screen, pipe.x, 0, pipeWidth, topHeightRect, pipeColor)
 		ebitenutil.DrawRect(screen, pipe.x, bottomY, pipeWidth, bottomHeight, pipeColor)
 	}
+
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Score: %d", g.score), 10, 10)
 }
 
 func (Game) Layout(_, _ int) (int, int) {
