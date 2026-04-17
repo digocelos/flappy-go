@@ -86,6 +86,16 @@ func (g *Game) initPipes() {
 	}
 }
 
+func (g *Game) restart() {
+	g.birdX = screenWidth/2 - birdWidth/2
+	g.birdYPos = screenHeight/2 - birdHeight/2
+	g.birdYVel = 0
+	g.score = 0
+	g.frames = 0
+	g.gameOver = false
+	g.initPipes()
+}
+
 func (g *Game) Update() error {
 	if autoExit {
 		g.frames++
@@ -95,6 +105,9 @@ func (g *Game) Update() error {
 	}
 
 	if g.gameOver {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			g.restart()
+		}
 		return nil
 	}
 
