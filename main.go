@@ -3,7 +3,9 @@ package main
 import (
 	"image/color"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,26 +19,63 @@ const (
 	birdHeight   = 26
 	gravityAccel = 0.3
 	jumpImpulse  = -6.2
+	pipeWidth    = 60
+	pipeGap      = 150
+	pipeSpeed    = 2.5
+	pipeSpacing  = 220
+	pipePadding  = 60
 )
 
 var background = color.RGBA{R: 40, G: 120, B: 200, A: 0xff}
 var birdColor = color.RGBA{R: 250, G: 200, B: 30, A: 0xff}
+var pipeColor = color.RGBA{R: 20, G: 150, B: 40, A: 0xff}
 
 const displayFrames = 60
 
 var autoExit = os.Getenv("FLAPPY_AUTO_EXIT") == "1"
 
 type Game struct {
-	frames   int
-	birdX    float64
-	birdYPos float64
-	birdYVel float64
+	frames    int
+	birdX     float64
+	birdYPos  float64
+	birdYVel  float64
+	pipes     []Pipe
+	nextPipeX float64
 }
 
 func NewGame() *Game {
-	return &Game{
+	g := &Game{
 		birdX:    screenWidth/2 - birdWidth/2,
 		birdYPos: screenHeight/2 - birdHeight/2,
+	}
+	g.initPipes()
+	return g
+}
+
+type Pipe struct {
+	x    float64
+	gapY float64
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func newPipe(x float64) Pipe {
+	maxGapY := float64(screenHeight) - pipeGap - pipePadding
+	if maxGapY < pipePadding {
+		maxGapY = pipePadding
+	}
+	gapY := pipePadding + rand.Float64()*(maxGapY-pipePadding)
+	return Pipe{x: x, gapY: gapY}
+}
+
+func (g *Game) initPipes() {
+	g.pipes = g.pipes[:0]
+	g.nextPipeX = float64(screenWidth) + pipeSpacing
+	for i := 0; i < 3; i++ {
+		g.pipes = append(g.pipes, newPipe(g.nextPipeX))
+		g.nextPipeX += pipeSpacing
 	}
 }
 
@@ -54,12 +93,33 @@ func (g *Game) Update() error {
 
 	g.birdYVel += gravityAccel
 	g.birdYPos += g.birdYVel
+
+	for i := range g.pipes {
+		g.pipes[i].x -= pipeSpeed
+	}
+
+	for len(g.pipes) > 0 && g.pipes[0].x+pipeWidth < 0 {
+		g.pipes = g.pipes[1:]
+	}
+
+	for len(g.pipes) == 0 || g.pipes[len(g.pipes)-1].x+pipeWidth <= float64(screenWidth) {
+		g.pipes = append(g.pipes, newPipe(g.nextPipeX))
+		g.nextPipeX += pipeSpacing
+	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(background)
 	ebitenutil.DrawRect(screen, g.birdX, g.birdYPos, birdWidth, birdHeight, birdColor)
+	for _, pipe := range g.pipes {
+		topHeight := pipe.gapY
+		bottomY := pipe.gapY + pipeGap
+		topHeightRect := topHeight
+		bottomHeight := float64(screenHeight) - bottomY
+		ebitenutil.DrawRect(screen, pipe.x, 0, pipeWidth, topHeightRect, pipeColor)
+		ebitenutil.DrawRect(screen, pipe.x, bottomY, pipeWidth, bottomHeight, pipeColor)
+	}
 }
 
 func (Game) Layout(_, _ int) (int, int) {
