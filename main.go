@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	screenWidth  = 480
+	screenWidth  = 800
 	screenHeight = 640
 	birdWidth    = 38
 	birdHeight   = 26
@@ -26,9 +26,11 @@ const (
 	pipePadding  = 60
 )
 
-var background = color.RGBA{R: 40, G: 120, B: 200, A: 0xff}
-var birdColor = color.RGBA{R: 250, G: 200, B: 30, A: 0xff}
-var pipeColor = color.RGBA{R: 20, G: 150, B: 40, A: 0xff}
+var (
+	background = color.RGBA{R: 40, G: 120, B: 200, A: 0xff}
+	birdColor  = color.RGBA{R: 250, G: 200, B: 30, A: 0xff}
+	pipeColor  = color.RGBA{R: 20, G: 150, B: 40, A: 0xff}
+)
 
 const displayFrames = 60
 
