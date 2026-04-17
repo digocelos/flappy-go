@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -15,6 +16,7 @@ const (
 	birdWidth    = 38
 	birdHeight   = 26
 	gravityAccel = 0.3
+	jumpImpulse  = -6.2
 )
 
 var background = color.RGBA{R: 40, G: 120, B: 200, A: 0xff}
@@ -44,6 +46,10 @@ func (g *Game) Update() error {
 		if g.frames > displayFrames {
 			os.Exit(0)
 		}
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		g.birdYVel = jumpImpulse
 	}
 
 	g.birdYVel += gravityAccel
